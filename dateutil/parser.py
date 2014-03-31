@@ -317,6 +317,16 @@ class parser(object):
             value = getattr(res, attr)
             if value is not None:
                 repl[attr] = value
+
+        # Check to ensure we're not going over the month's day limit
+        if 'day' not in repl and 'month' in repl:
+            base_year = repl.get('year') or default.year
+            days_in_february = 28 if base_year % 4 else 29
+            if repl['month'] == 2 and default.day > days_in_february:
+                repl['day'] = days_in_february
+            elif repl['month'] in (4,6,9,11) and default.day > 30:
+                repl['day'] = 30
+
         ret = default.replace(**repl)
         if res.weekday is not None and not res.day:
             ret = ret+relativedelta.relativedelta(weekday=res.weekday)
